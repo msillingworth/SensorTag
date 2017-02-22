@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 48;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -181,7 +181,7 @@
 				LastSwiftMigration = 0710;
 				LastSwiftUpdateCheck = 0710;
 				LastUpgradeCheck = 0820;
-				ORGANIZATIONNAME = "Anas Imtiaz";
+				ORGANIZATIONNAME = "Mark Illingworth";
 				TargetAttributes = {
 					97E4491D1A76A8EB00AECF47 = {
 						CreatedOnToolsVersion = 6.1.1;
@@ -202,7 +202,7 @@
 				};
 			};
 			buildConfigurationList = 97E449191A76A8EB00AECF47 /* Build configuration list for PBXProject "SwiftSensorTag" */;
-			compatibilityVersion = "Xcode 3.2";
+			compatibilityVersion = "Xcode 8.0";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
