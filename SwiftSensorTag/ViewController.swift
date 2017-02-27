@@ -3,7 +3,7 @@
 //  SwiftSensorTag
 //
 //  Created by Mark Illingworth 15/02/2017.
-//  Copyright © 2015 Anas Imtiaz. All rights reserved.
+//  Copyright © 2017 Mark Illingworth All rights reserved.
 //
 
 import UIKit
@@ -76,7 +76,6 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
         }
         
         // Storing Core Data
-        
         var ambientTempArr: [Double] = []
         var objectTempArr: [Double] = []
         //var humidityArr: [Double] = []
@@ -145,6 +144,10 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
         catch {
             // Process Error here
         }
+        
+        centralManagerDidUpdateState(centralManager)
+        centralManager(centralManager, didConnect: sensorTagPeripheral)
+        
     }
     
     override func didReceiveMemoryWarning() {

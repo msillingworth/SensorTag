@@ -3,7 +3,7 @@
 //  SwiftSensorTag
 //
 //  reated by Mark Illingworth 15/02/2017.
-//  Copyright © 2015 Anas Imtiaz. All rights reserved.
+//  Copyright © 2017 Mark Illingworth. All rights reserved.
 //
 
 import UIKit
