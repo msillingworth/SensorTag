@@ -62,6 +62,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
         statusLabel.text = "Loading..."
         statusLabel.font = UIFont(name: "HelveticaNeue-Light", size: 12)
         statusLabel.sizeToFit()
+        
         //statusLabel.center = CGPoint(x: self.view.frame.midX, y: (titleLabel.frame.maxY + statusLabel.bounds.height/2) )
         statusLabel.frame = CGRect(x: self.view.frame.origin.x, y: self.titleLabel.frame.maxY, width: self.view.frame.width, height: self.statusLabel.bounds.height)
         self.view.addSubview(statusLabel)
@@ -145,8 +146,8 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
             // Process Error here
         }
         
-        centralManagerDidUpdateState(centralManager)
-        centralManager(centralManager, didConnect: sensorTagPeripheral)
+        //centralManagerDidUpdateState(centralManager)
+        //centralManager(centralManager, didConnect: sensorTagPeripheral)
         
     }
     
@@ -161,14 +162,15 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
      
      // Check status of BLE hardware
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        if central.state == CBManagerState.poweredOn {
+        if centralManager.state == .poweredOn {
             // Scan for peripherals if BLE is turned on
-            central.scanForPeripherals(withServices: nil, options: nil)
+            centralManager.scanForPeripherals(withServices: nil, options: nil)
             self.statusLabel.text = "Searching for BLE Devices"
         }
-        else {
+        else if centralManager.state != .poweredOn {
             // Can have different conditions for all states if needed - show generic alert for now
-            showAlertWithText("Error", message: "Bluetooth switched off or not initialized")
+            NSLog("Error: Bluetooth is switched off or not intialized")
+            //showAlertWithText("Error", message: "Bluetooth switched off or not initialized")
         }
     }
     
@@ -185,7 +187,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
             self.centralManager.stopScan()
             self.sensorTagPeripheral = peripheral
             self.sensorTagPeripheral.delegate = self
-            self.centralManager.connect(peripheral, options: nil)
+            centralManager.connect(peripheral, options: nil)
         }
         else {
             self.statusLabel.text = "Sensor Tag NOT Found"
@@ -196,14 +198,14 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
     // Discover services of the peripheral
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         self.statusLabel.text = "Discovering peripheral services"
-        peripheral.discoverServices(nil)
+        sensorTagPeripheral.discoverServices(nil)
     }
     
     
     // If disconnected, start searching again
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         self.statusLabel.text = "Disconnected"
-        central.scanForPeripherals(withServices: nil, options: nil)
+        centralManager.scanForPeripherals(withServices: nil, options: nil)
     }
     
     /******* CBCentralPeripheralDelegate *******/
@@ -216,13 +218,14 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
      // Barometer Service
      // Gyroscope Service
      // (Others are not implemented)
+    
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         self.statusLabel.text = "Looking at peripheral services"
-        for service in peripheral.services! {
+        for service in sensorTagPeripheral.services! {
             let thisService = service as CBService
             if SensorTag.validService(thisService) {
                 // Discover characteristics of all valid services
-                peripheral.discoverCharacteristics(nil, for: thisService)
+                sensorTagPeripheral.discoverCharacteristics(nil, for: thisService)
             }
         }
     }
