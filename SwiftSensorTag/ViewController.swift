@@ -146,8 +146,6 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
             // Process Error here
         }
         
-        //centralManagerDidUpdateState(centralManager)
-        //centralManager(centralManager, didConnect: sensorTagPeripheral)
         
     }
     
@@ -169,8 +167,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
         }
         else if centralManager.state != .poweredOn {
             // Can have different conditions for all states if needed - show generic alert for now
-            NSLog("Error: Bluetooth is switched off or not intialized")
-            //showAlertWithText("Error", message: "Bluetooth switched off or not initialized")
+            showAlertWithText("Error", message: "Bluetooth switched off or not initialized")
         }
     }
     
@@ -178,7 +175,8 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
     // Check out the discovered peripherals to find Sensor Tag
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
         
-        if SensorTag.sensorTagFound(advertisementData) == true {
+        
+        if sensorTagPeripheral(advertisementData) == service.uuid("180a") {
             
             // Update Status Label
             self.statusLabel.text = "Sensor Tag Found"
@@ -188,8 +186,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
             self.sensorTagPeripheral = peripheral
             self.sensorTagPeripheral.delegate = self
             centralManager.connect(peripheral, options: nil)
-        }
-        else {
+        } else {
             self.statusLabel.text = "Sensor Tag NOT Found"
             //showAlertWithText(header: "Warning", message: "SensorTag has not been Not Found")
         }
@@ -220,14 +217,23 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
      // (Others are not implemented)
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
-        self.statusLabel.text = "Looking at peripheral services"
+        self.statusLabel.text = "Looking for peripheral services"
+        
+        NSLog("Got to line 223")
         for service in sensorTagPeripheral.services! {
             let thisService = service as CBService
-            if SensorTag.validService(thisService) {
-                // Discover characteristics of all valid services
-                sensorTagPeripheral.discoverCharacteristics(nil, for: thisService)
-            }
+            sensorTagPeripheral.discoverCharacteristics(nil, for: thisService)
+            NSLog("Got to line 228")
         }
+        
+//        for service in sensorTagPeripheral.services! {
+//            let thisService = service as CBService
+//            if SensorTag.validService(thisService) {
+//                // Discover characteristics of all valid services
+//                sensorTagPeripheral.discoverCharacteristics(nil, for: thisService)
+//                NSLog("Got to line 231")
+//            }
+//       }
     }
     
     
@@ -235,26 +241,38 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         
         self.statusLabel.text = "Enabling sensors"
-        
-        var enableValue = 1
-        let enablyBytes = NSData(bytes: &enableValue, length: allSensorLabels.count) as Data
-        
+        NSLog("Got to line 246")
+        //var enableValue = 1
+        //let enablyBytes = NSData(bytes: &enableValue, length: allSensorLabels.count) as Data
         // let enablyBytes = Data(bytes: UnsafePointer<UInt8>(&enableValue), count: sizeof(UInt8))
         
-        for charateristic in service.characteristics! {
-            let thisCharacteristic = charateristic as CBCharacteristic
-            if SensorTag.validDataCharacteristic(thisCharacteristic) {
-                // Enable Sensor Notification
-                self.sensorTagPeripheral.setNotifyValue(true, for: thisCharacteristic)
-            }
-            if SensorTag.validConfigCharacteristic(thisCharacteristic) {
-                // Enable Sensor
-                self.sensorTagPeripheral.writeValue(enablyBytes, for: thisCharacteristic, type: CBCharacteristicWriteType.withResponse)
-            }
-        }
+       for charateristic in service.characteristics! {
         
+                self.sensorTagPeripheral.setNotifyValue(true, for: charateristic)
+                NSLog("Got to line 255")
+            }
+            
+    }
+//            let thisCharacteristic = charateristic as CBCharacteristic
+//            if SensorTag.validDataCharacteristic(thisCharacteristic) {
+//                // Enable Sensor Notification
+//                self.sensorTagPeripheral.setNotifyValue(true, for: thisCharacteristic)
+//            }
+//            if SensorTag.validConfigCharacteristic(thisCharacteristic) {
+//                // Enable Sensor
+//                self.sensorTagPeripheral.writeValue(enablyBytes, for: thisCharacteristic, type: CBCharacteristicWriteType.withResponse)
+//            }
+
+    
+    
+    func peripheralManager(_ peripheral: CBPeripheralManager, central: CBCentral, didSubscribeTo characteristic: CBCharacteristic) {
+        NSLog("Central called %@ subscribed to characteristic %@", centralManager, characteristic)
     }
     
+    
+    func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
+        
+    }
     
     
     // Get data values when they are updated
@@ -269,7 +287,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
             self.allSensorValues[1] = self.objectTemperature
         }
         else if characteristic.uuid == AccelerometerDataUUID {
-            let allValues = SensorTag.getAccelerometerData(characteristic.value!)
+            let allValues: [Double] = SensorTag.getAccelerometerData(characteristic.value!)
             self.accelerometerX = allValues[0]
             self.accelerometerY = allValues[1]
             self.accelerometerZ = allValues[2]
@@ -282,7 +300,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
             self.allSensorValues[5] = self.relativeHumidity
         }
         else if characteristic.uuid == MagnetometerDataUUID {
-            let allValues = SensorTag.getMagnetometerData(characteristic.value!)
+            let allValues: [Double] = SensorTag.getMagnetometerData(characteristic.value!)
             self.magnetometerX = allValues[0]
             self.magnetometerY = allValues[1]
             self.magnetometerZ = allValues[2]
@@ -291,7 +309,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
             self.allSensorValues[8] = self.magnetometerZ
         }
         else if characteristic.uuid == GyroscopeDataUUID {
-            let allValues = SensorTag.getGyroscopeData(characteristic.value!)
+            let allValues: [Double] = SensorTag.getGyroscopeData(characteristic.value!)
             self.gyroscopeX = allValues[0]
             self.gyroscopeY = allValues[1]
             self.gyroscopeZ = allValues[2]
@@ -363,10 +381,10 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
         self.sensorTagTableView.tableFooterView = UIView() // to hide empty lines after cells
         self.view.addSubview(self.sensorTagTableView)
     }
-    
+}
    
     
     
-}
+
 
 

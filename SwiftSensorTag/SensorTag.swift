@@ -10,7 +10,7 @@ import Foundation
 import CoreBluetooth
 
 
-let deviceName = "SensorTag" as NSString
+let deviceName = "msillingworth_sensor_01" as NSString
 
 // Service UUIDs
 let IRTemperatureServiceUUID = CBUUID(string: "F000AA00-0451-4000-B000-000000000000")
@@ -41,10 +41,13 @@ class SensorTag {
     // Check name of device from advertisement data
     class func sensorTagFound (_ advertisementData: [AnyHashable: Any]!) -> Bool {
         let nameOfDeviceFound = (advertisementData as NSDictionary).object(forKey: CBAdvertisementDataLocalNameKey) as? NSString
-        return (nameOfDeviceFound == deviceName)
-    }
-    
-    
+        if nameOfDeviceFound == deviceName {
+          return  true
+        }
+          return false
+        }
+
+
     // Check if the service has a valid UUID
     class func validService (_ service : CBService) -> Bool {
         if service.uuid == IRTemperatureServiceUUID || service.uuid == AccelerometerServiceUUID ||
