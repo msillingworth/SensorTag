@@ -68,7 +68,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
         self.view.addSubview(statusLabel)
         
         // Set up table view
-        setupSensorTagTableView()
+        sensorTagTableView()
         
         // Initialize all sensor values and labels
         allSensorLabels = SensorTag.getSensorLabels()
@@ -149,12 +149,6 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
         
     }
     
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-    
-    
     
     /******* CBCentralManagerDelegate *******/
      
@@ -176,8 +170,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
         
         
-        if sensorTagPeripheral(advertisementData) == service.uuid("180a") {
-            
+        if true {
             // Update Status Label
             self.statusLabel.text = "Sensor Tag Found"
             
@@ -196,6 +189,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         self.statusLabel.text = "Discovering peripheral services"
         sensorTagPeripheral.discoverServices(nil)
+        NSLog("Line 191: sensorTagPeripheral.discoverServices")
     }
     
     
@@ -203,6 +197,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         self.statusLabel.text = "Disconnected"
         centralManager.scanForPeripherals(withServices: nil, options: nil)
+        NSLog("Line 199: Disconnected, started scanning again")
     }
     
     /******* CBCentralPeripheralDelegate *******/
@@ -218,22 +213,14 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         self.statusLabel.text = "Looking for peripheral services"
+        NSLog("Line 216")
         
-        NSLog("Got to line 223")
         for service in sensorTagPeripheral.services! {
             let thisService = service as CBService
+            // Discover characteristics of all valid services
             sensorTagPeripheral.discoverCharacteristics(nil, for: thisService)
-            NSLog("Got to line 228")
+            NSLog("Line 220: sensorTagPeripheral.discoverCharacteristics(nil, for: thisService)")
         }
-        
-//        for service in sensorTagPeripheral.services! {
-//            let thisService = service as CBService
-//            if SensorTag.validService(thisService) {
-//                // Discover characteristics of all valid services
-//                sensorTagPeripheral.discoverCharacteristics(nil, for: thisService)
-//                NSLog("Got to line 231")
-//            }
-//       }
     }
     
     
@@ -241,27 +228,24 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         
         self.statusLabel.text = "Enabling sensors"
-        NSLog("Got to line 246")
-        //var enableValue = 1
-        //let enablyBytes = NSData(bytes: &enableValue, length: allSensorLabels.count) as Data
-        // let enablyBytes = Data(bytes: UnsafePointer<UInt8>(&enableValue), count: sizeof(UInt8))
         
-       for charateristic in service.characteristics! {
         
-                self.sensorTagPeripheral.setNotifyValue(true, for: charateristic)
-                NSLog("Got to line 255")
-            }
-            
-    }
-//            let thisCharacteristic = charateristic as CBCharacteristic
-//            if SensorTag.validDataCharacteristic(thisCharacteristic) {
-//                // Enable Sensor Notification
-//                self.sensorTagPeripheral.setNotifyValue(true, for: thisCharacteristic)
-//            }
-//            if SensorTag.validConfigCharacteristic(thisCharacteristic) {
-//                // Enable Sensor
-//                self.sensorTagPeripheral.writeValue(enablyBytes, for: thisCharacteristic, type: CBCharacteristicWriteType.withResponse)
-//            }
+        var enableValue = 1
+        let enablyBytes = NSData(bytes: &enableValue, length: allSensorLabels.count) as Data
+        //let enablyBytes = Data(bytes: UnsafePointer<UInt8>(&enableValue), count: sizeof(UInt8))
+       
+        let thisCharacteristic: CBCharacteristic!
+        if SensorTag.validDataCharacteristic(thisCharacteristic) {
+            self.sensorTagPeripheral.setNotifyValue(true, for: thisCharacteristic)
+            NSLog("Line 240: self.sensorTagPeripheral.setNotifyValue(true, for: charateristic) ")
+        }
+        if SensorTag.validConfigCharacteristic(thisCharacteristic) {
+                // Enable Sensor
+            self.sensorTagPeripheral.writeValue(enablyBytes, for: thisCharacteristic, type: CBCharacteristicWriteType.withResponse)
+            NSLog("Line 245: enabled Sensor")
+        }
+        
+
 
     
     
@@ -358,7 +342,7 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
     /******* Helper *******/
      
      // Show alert
-    func showAlertWithText (_ header : String = "Warning", message : String) {
+    func showAlertWithText(_ header : String = "Warning", message : String) {
         let alert = UIAlertController(title: header, message: message, preferredStyle: UIAlertControllerStyle.alert)
         alert.addAction(UIAlertAction(title: "Ok", style: UIAlertActionStyle.default, handler: nil))
         alert.view.tintColor = UIColor.red
